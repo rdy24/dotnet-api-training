@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using CinemaApi.DTOs.User;
 using CinemaApi.Interfaces;
 using CinemaApi.Responses;
@@ -7,6 +8,7 @@ namespace CinemaApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -19,14 +21,18 @@ namespace CinemaApi.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ApiResponse<IEnumerable<UserDto>>>> GetUsers()
         {
+            _logger.LogInformation("API: Getting all users");
             var users = await _userService.GetAllUsersAsync();
             var response = ApiResponse<IEnumerable<UserDto>>.SuccessResult(users, "Users retrieved successfully");
+            _logger.LogInformation("API: Returning {Count} users", users.Count());
             return Ok(response);
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,Customer")]
         public async Task<ActionResult<ApiResponse<UserDto>>> GetUser(int id)
         {
             var user = await _userService.GetUserByIdAsync(id);
@@ -40,6 +46,7 @@ namespace CinemaApi.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser(CreateUserDto createUserDto)
         {
             _logger.LogInformation("API: Creating user {Username}", createUserDto.Username);
@@ -50,6 +57,7 @@ namespace CinemaApi.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ApiResponse<UserDto>>> UpdateUser(int id, UpdateUserDto updateUserDto)
         {
             var user = await _userService.UpdateUserAsync(id, updateUserDto);
@@ -63,6 +71,7 @@ namespace CinemaApi.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ApiResponse>> DeleteUser(int id)
         {
             _logger.LogInformation("API: Deleting user with ID {UserId}", id);
