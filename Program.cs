@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Security.Claims;
 using CinemaApi.Data;
 using CinemaApi.Repositories;
 using CinemaApi.Services;
@@ -39,11 +40,25 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero,
+        RoleClaimType = ClaimTypes.Role
     };
     
     options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
     {
+        OnTokenValidated = context =>
+        {
+            // Debug: Log the claims to see what's in the token
+            var claims = context.Principal?.Claims;
+            if (claims != null)
+            {
+                foreach (var claim in claims)
+                {
+                    Console.WriteLine($"Claim Type: {claim.Type}, Value: {claim.Value}");
+                }
+            }
+            return Task.CompletedTask;
+        },
         OnChallenge = async context =>
         {
             // Skip the default logic
@@ -94,17 +109,24 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer"));
+    options.AddPolicy("AdminOrCustomer", policy => policy.RequireRole("Admin", "Customer"));
+});
 
 // Register repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IStudioRepository, StudioRepository>();
+builder.Services.AddScoped<IMovieRepository, MovieRepository>();
 
 // Register services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IStudioService, StudioService>();
+builder.Services.AddScoped<IMovieService, MovieService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using CinemaApi.Interfaces;
 using CinemaApi.DTOs.Studio;
 using CinemaApi.Responses;
+using CinemaApi.Attributes;
 
 namespace CinemaApi.Controllers
 {
@@ -21,7 +23,7 @@ namespace CinemaApi.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin,Customer")]
+        [Authorize]
         public async Task<IActionResult> GetAllStudios()
         {
             _logger.LogInformation("Getting all studios");
@@ -31,7 +33,7 @@ namespace CinemaApi.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin,Customer")]
+        [Authorize]
         public async Task<IActionResult> GetStudio(int id)
         {
             _logger.LogInformation("Getting studio by ID: {StudioId}", id);
@@ -48,9 +50,11 @@ namespace CinemaApi.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
+        [RequireRole("Admin")]
         public async Task<IActionResult> CreateStudio([FromBody] CreateStudioDto createStudioDto)
         {
+            
             if (!ModelState.IsValid)
             {
                 _logger.LogWarning("Invalid model state for creating studio");
@@ -71,7 +75,8 @@ namespace CinemaApi.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
+        [RequireRole("Admin")]
         public async Task<IActionResult> UpdateStudio(int id, [FromBody] UpdateStudioDto updateStudioDto)
         {
             if (!ModelState.IsValid)
@@ -100,7 +105,8 @@ namespace CinemaApi.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
+        [RequireRole("Admin")]
         public async Task<IActionResult> DeleteStudio(int id)
         {
             _logger.LogInformation("Deleting studio with ID: {StudioId}", id);

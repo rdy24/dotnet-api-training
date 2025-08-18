@@ -37,10 +37,10 @@ namespace CinemaApi.Data
             {
                 context.Users.AddRange(
                     new User { 
-                        Name = "John Doe", 
-                        Email = "john.doe@email.com", 
-                        Username = "johndoe", 
-                        Password = PasswordHelper.HashPassword("123456"),
+                        Name = "Customer User", 
+                        Email = "customer@cinema.com", 
+                        Username = "customer", 
+                        Password = PasswordHelper.HashPassword("customer123"),
                         Phone = "081234567890",
                         Role = "Customer",
                         CreatedAt = new DateTime(2024, 1, 1, 9, 0, 0),
