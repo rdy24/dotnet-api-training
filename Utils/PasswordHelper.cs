@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace MovieApp.Utils
+namespace CinemaApi.Utils
 {
     public static class PasswordHelper
     {
