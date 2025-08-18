@@ -23,7 +23,7 @@ namespace CinemaApi.Controllers
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = "Admin,Customer")]
         public async Task<IActionResult> GetAllStudios()
         {
             _logger.LogInformation("Getting all studios");
@@ -33,7 +33,7 @@ namespace CinemaApi.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize]
+        [Authorize(Roles = "Admin,Customer")]
         public async Task<IActionResult> GetStudio(int id)
         {
             _logger.LogInformation("Getting studio by ID: {StudioId}", id);
@@ -50,8 +50,7 @@ namespace CinemaApi.Controllers
         }
 
         [HttpPost]
-        [Authorize]
-        [RequireRole("Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateStudio([FromBody] CreateStudioDto createStudioDto)
         {
             
@@ -75,8 +74,7 @@ namespace CinemaApi.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize]
-        [RequireRole("Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateStudio(int id, [FromBody] UpdateStudioDto updateStudioDto)
         {
             if (!ModelState.IsValid)
@@ -105,8 +103,7 @@ namespace CinemaApi.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize]
-        [RequireRole("Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteStudio(int id)
         {
             _logger.LogInformation("Deleting studio with ID: {StudioId}", id);
