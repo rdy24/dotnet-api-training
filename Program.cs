@@ -123,6 +123,7 @@ builder.Services.AddScoped<IStudioRepository, StudioRepository>();
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
 builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 
 // Register services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -131,6 +132,13 @@ builder.Services.AddScoped<IStudioService, StudioService>();
 builder.Services.AddScoped<IMovieService, MovieService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+
+// Register background services
+builder.Services.AddSingleton<ITransactionQueueService, TransactionQueueService>();
+builder.Services.AddSingleton<ITransactionSchedulerService, TransactionSchedulerService>();
+builder.Services.AddHostedService<TransactionQueueService>();
+builder.Services.AddHostedService<TransactionSchedulerService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
