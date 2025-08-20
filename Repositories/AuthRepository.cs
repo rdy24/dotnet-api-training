@@ -72,10 +72,13 @@ namespace CinemaApi.Repositories
         public string GenerateJwtToken(User user)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");
-            var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey is not configured");
+            
+            // Environment variables take priority over appsettings.json
+            var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") 
+                ?? throw new InvalidOperationException("JWT SecretKey must be provided via environment variable JWT_SECRET_KEY");
             var issuer = jwtSettings["Issuer"] ?? throw new InvalidOperationException("JWT Issuer is not configured");
             var audience = jwtSettings["Audience"] ?? throw new InvalidOperationException("JWT Audience is not configured");
-            var expiryInHours = int.Parse(jwtSettings["ExpiryInHours"] ?? "24");
+            var expiryInHours = int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRY_HOURS") ?? jwtSettings["ExpiryInHours"] ?? "24");
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

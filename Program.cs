@@ -8,21 +8,49 @@ using CinemaApi.Repositories;
 using CinemaApi.Services;
 using CinemaApi.Interfaces;
 using CinemaApi.Middleware;
+using DotNetEnv;
+
+// Load environment variables from .env file
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+// Configure Sentry
+var sentryDsn = Environment.GetEnvironmentVariable("SENTRY_DSN");
+if (!string.IsNullOrEmpty(sentryDsn))
+{
+    builder.WebHost.UseSentry(options =>
+    {
+        options.Dsn = sentryDsn;
+        options.Debug = builder.Environment.IsDevelopment();
+        options.TracesSampleRate = builder.Environment.IsDevelopment() ? 1.0 : 0.1;
+    });
+}
 
 // Configure logging
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
+builder.Logging.AddSentry();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
 // Add services to the container.
 builder.Services.AddDbContext<CinemaDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ?? builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey is not configured");
+var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
+var issuer = jwtSettings["Issuer"];
+var audience = jwtSettings["Audience"];
+
+
+if (string.IsNullOrEmpty(secretKey))
+    throw new InvalidOperationException("JWT SecretKey must be provided via environment variable JWT_SECRET_KEY");
+if (string.IsNullOrEmpty(issuer))
+    throw new InvalidOperationException("JWT Issuer not configured");
+if (string.IsNullOrEmpty(audience))
+    throw new InvalidOperationException("JWT Audience not configured");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -37,8 +65,8 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
+        ValidIssuer = issuer,
+        ValidAudience = audience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
         ClockSkew = TimeSpan.Zero,
         RoleClaimType = ClaimTypes.Role
@@ -155,6 +183,9 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
+// Use Sentry request tracking
+app.UseSentryTracing();
+
 // Use global exception handling middleware first
 app.UseGlobalExceptionHandling();
 

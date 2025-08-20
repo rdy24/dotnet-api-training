@@ -109,7 +109,7 @@ namespace CinemaApi.Controllers
                 throw new KeyNotFoundException($"Transaction with ID {id} not found");
             }
             
-            var response = ApiResponse<object>.SuccessResult(null, "Transaction deleted successfully");
+            var response = ApiResponse<object>.SuccessResult(new { }, "Transaction deleted successfully");
             _logger.LogInformation("API: Transaction {TransactionId} deleted successfully", id);
             return Ok(response);
         }

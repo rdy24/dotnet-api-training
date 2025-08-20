@@ -3,6 +3,7 @@ using CinemaApi.DTOs.Auth;
 using CinemaApi.Interfaces;
 using CinemaApi.Responses;
 using CinemaApi.Filters;
+using Sentry;
 
 namespace CinemaApi.Controllers
 {
@@ -34,6 +35,45 @@ namespace CinemaApi.Controllers
             _logger.LogInformation("API: Login successful for user: {Username}", loginDto.Username);
             
             return Ok(response);
+        }
+
+        [HttpGet("test-sentry")]
+        public IActionResult TestSentry()
+        {
+            _logger.LogInformation("Testing Sentry integration");
+            
+            // Test different Sentry features
+            SentrySdk.CaptureMessage("Hello Sentry! This is a test message");
+            
+            // Test with levels
+            SentrySdk.CaptureMessage("Info level test", SentryLevel.Info);
+            SentrySdk.CaptureMessage("Warning level test", SentryLevel.Warning);
+            
+            // Test with additional data
+            SentrySdk.ConfigureScope(scope =>
+            {
+                scope.SetTag("test-endpoint", "auth-test-sentry");
+                scope.SetExtra("timestamp", DateTime.UtcNow);
+                scope.User = new SentryUser { Email = "test@cinema-api.com" };
+            });
+            
+            SentrySdk.CaptureMessage("Test message with context data");
+            
+            // Test exception capture
+            try
+            {
+                throw new Exception("This is a test exception for Sentry");
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
+            
+            return Ok(new { 
+                success = true, 
+                message = "Sentry test messages sent! Check your Sentry dashboard.",
+                timestamp = DateTime.UtcNow 
+            });
         }
     }
 }
